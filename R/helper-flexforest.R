@@ -14,16 +14,63 @@ bootstrap_sample = function(data, prop=.67) {
 get_mtry = function(variables, mtry=NULL) {
   if (!is.null(mtry)) return(mtry)
   if (is.list(variables)) return(lapply(variables, function(x) sqrt(length(x))))
-  sqrt(length(x))
+  sqrt(length(variables))
 }
 
 variable_sampler = function(variables, mtry=NULL) {
+
   if (is.null(mtry)) mtry = get_mtry(variables)
   if (!is.list(variables)) return(sample(variables, size=mtry))
   variables = 1:length(variables) %>%
-              map(function(x) sample(variables[[x]], size=mtry[[x]])) %>%
-              unlist
+              map(function(x) sample(variables[[x]], size=mtry[[x]]))
   return(variables)
+}
+
+return_formula_i = function(formula, variable_sampler=NULL) {
+
+  if (is.null(variable_sampler)) {
+    variables = all.vars(formula)
+    predictors = variables[-1]
+    response   = variables[1]
+    predictors_i = variable_sampler(predictors)
+    return(formula(paste0(response, " ~ ", paste0(predictors_i, collapse=" + "))))
+  } else {
+    return(variable_sampler_sem(formula))
+  }
+}
+
+return_data_i = function(data, data_sampler = NULL) {
+  if (is.null(data_sampler)) {
+    return(bootstrap_sample(data))
+  } else {
+    return(data_sampler(data))
+  }
+}
+
+fit_data_i = function(formula_i, data_i, fit_function=NULL, ...) {
+
+  if (!is.null(fit_function)) {
+    return(fit_function(formula_i, data_i))
+  } else {
+    return(lm(formula_i, data_i, ...))
+  }
+}
+
+validation_fit_i = function(fit_i, data_i, validation_function) {
+  if (!is.null(validation_function)) {
+    return(validation_function(fit_i, data_i))
+  } else {
+    predict(fit_i, newdata=data_i)
+  }
+}
+
+loss_function_i = function(model_i, loss_function=NULL) {
+  if (is.null(loss_function)) {
+    observed_y = all.vars(formula(model_i))[1]
+    return(sum((fitted(model_i) - observed_y)^2))
+  } else {
+    return(loss_function(model_i))
+  }
 }
 
 fit_function_check = function(data, model, formula) {
