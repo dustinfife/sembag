@@ -59,17 +59,7 @@ flexforest = function(data, formula, iterations=500,
   return(results)
 }
 
-# flexforest_inloop(data=test, formula=test_model, iterations = 10,
-#   fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
-#   loss_function = loss_sem, validation_function = loss_sem,
-#   mtry = mtry)
 
-# start = Sys.time()
-# flexforest(data=test, iterations = 50,
-#              formula = test_model, fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
-#            validation_function = loss_sem)
-# end = Sys.time()
-# end - start
 
 # This can also be used for mixed effect models! But I need to have users be able
 # to define what is versus is not randomly selected

@@ -59,7 +59,11 @@ validation_fit_i = function(fit_i, data_i, validation_function) {
   if (!is.null(validation_function)) {
     return(validation_function(fit_i, data_i))
   } else {
-    predict(fit_i, newdata=data_i)
+    outcome = all.vars(formula(fit_i))
+    observed = fit_i$model[,outcome]
+    predicted = predict(fit_i, newdata=data_i)
+    sse = sum((observed-predicted)^2)
+    sse
   }
 }
 
