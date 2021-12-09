@@ -1,9 +1,5 @@
 fit_rf_sem = function(formula, data, ...) {
-  sem(formula, data, ...)
-}
-
-loss_rf_sem = function(model) {
-
+  lavaan::sem(formula, data, ...)
 }
 
 # for sems, the formula is actually the model string
@@ -32,5 +28,5 @@ sem_write_one_line = function(latent, observed) {
 
 
 get_mtry_sem = function(observed) {
- 1:length(observed) %>% map(function(x) return(max(3, sqrt(length(observed[[x]])))))
+ 1:length(observed) %>% purrr::map(function(x) return(max(3, sqrt(length(observed[[x]])))))
 }

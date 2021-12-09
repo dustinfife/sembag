@@ -22,12 +22,11 @@ variable_sampler = function(variables, mtry=NULL) {
   if (is.null(mtry)) mtry = get_mtry(variables)
   if (!is.list(variables)) return(sample(variables, size=mtry))
   variables = 1:length(variables) %>%
-              map(function(x) sample(variables[[x]], size=mtry[[x]]))
+              purrr::map(function(x) sample(variables[[x]], size=mtry[[x]]))
   return(variables)
 }
 
 return_formula_i = function(formula, variable_sampler=NULL) {
-
   if (is.null(variable_sampler)) {
     variables = all.vars(formula)
     predictors = variables[-1]
@@ -76,8 +75,4 @@ loss_function_i = function(model_i, loss_function=NULL) {
 fit_function_check = function(data, model, formula) {
   # make sure formula follows the form of [y]~x+b+c+[d], where anything in brackets
   # should not be randomized
-}
-
-`%.%` = function(a, b) {
-  paste0(a, b)
 }

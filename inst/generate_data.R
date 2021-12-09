@@ -40,5 +40,5 @@ y =~ y1 + y2 + y3 + y4 + y5
 '
 usethis::use_data(test_model, overwrite=T)
 require(lavaan)
-test_fit = sem(model, data=test)
+test_fit = sem(test_model, data=test)
 usethis::use_data(test_fit, overwrite = T)

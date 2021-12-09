@@ -16,8 +16,31 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   # add later: extracting covariances and regressions
 }
 
+loss_sem = function(fit, data) {
+  observed_cov = cov(data[,lavaan::lavNames(fit)])
+  implied_cov  = lavaan::fitted(fit)$cov
+  f = log(det(implied_cov)) +
+    matrix_trace(implied_cov %*% solve(implied_cov)) -
+    log(det(observed_cov)) - ncol(observed_cov)
+  chi = (nrow(data)-1)*f
+  return(chi)
+}
 
-remove_names = function(object) {
-  names(object) = NULL
-  return(object)
+matrix_trace = function(matrix) {
+  sum(diag(matrix))
+}
+
+# loss function needs to be computed from the imputed data
+loss_sem_coef = function(fit) {
+  # store the coefficients for each variable
+  coefficients = standardizedSolution(fit)
+  factor_loadings = coefficients$op == "=~"
+  coef_names   = coefficients$rhs[factor_loadings]
+  latent_names = coefficients$lhs[factor_loadings]
+  coef_values  = coefficients$est.std[factor_loadings]
+  return(data.frame(observed = coef_names, latent = latent_names, coef = coef_values))
+}
+
+loss_sem_chisq = function(fit) {
+  lavaan::fitMeasures(fit, "chisq")
 }
