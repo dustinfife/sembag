@@ -26,6 +26,20 @@ loss_sem = function(fit, data) {
   return(chi)
 }
 
+permute_variables = function(fit, data) {
+  # get the variable names
+  names_i = lavaan::lavNames(fit)
+  chi_shuffled = as.list(names_i) %>% setNames(names_i)
+  # loop through variables and iterate
+  for (i in names_i) {
+    data_shuffled = data[,lavaan::lavNames(fit)]
+    data_shuffled[,i] = sample(data_shuffled[,i])
+    chi_shuffled[i] = loss_sem(fit, data_shuffled)
+  }
+
+  return(chi_shuffled)
+}
+
 matrix_trace = function(matrix) {
   sum(diag(matrix))
 }

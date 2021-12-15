@@ -33,8 +33,11 @@ flexforest_inloop = function(iteration = 1, data, formula, iterations,
   # fit to the validation set
   validation_i = validation_fit_i(fit_i, data=validation_i, validation_function)
 
+  # variable importance measure
+  vi_i = permute_variables(fit_i, data_sample$validation)
+
   # compute the loss function for the results
-  return(list(oob = validation_i, variables = formula_i))
+  return(list(oob = validation_i, variables = formula_i, vi = vi_i))
 
 }
 
