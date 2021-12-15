@@ -1,7 +1,7 @@
 set.seed(2323)
 require(tidyverse)
 # create latent variable
-x = rnorm(300)
+x = rnorm(3000)
 
 # create regular factor loadings
 rescale_round = function(x) {
