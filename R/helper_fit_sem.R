@@ -5,10 +5,11 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   latents  = models[seq(1, length(models), by=2)] %>% trimws() %>% remove_names()
   obs = models[seq(2, length(models), by=2)] %>% trimws() %>% remove_names()
 
+
   if (return_observed_as_vector) {
-    observed = unlist(lapply(obs, strsplit, " + ", fixed=TRUE))
+    observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE))
   } else {
-    observed = sapply(obs, strsplit, " + ", fixed=TRUE) %>% remove_names()
+    observed = sapply(obs, strsplit, "+", fixed=TRUE) %>% remove_names()
   }
 
   return(list(observed=observed, latents=latents))
@@ -57,4 +58,12 @@ loss_sem_coef = function(fit) {
 
 loss_sem_chisq = function(fit) {
   lavaan::fitMeasures(fit, "chisq")
+}
+
+
+aggregate_vi = function(i,list) {
+  browser()
+  whole_matrix = lavNames()
+  df = list$vi %>% as.data.frame()
+  names(uni)
 }

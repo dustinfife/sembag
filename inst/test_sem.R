@@ -1,14 +1,23 @@
-flexforest_inloop(data=test, formula=test_model, iterations = 10,
+
+flexforest_inloop(data=uni, formula=uni_mod, iterations = 10,
   fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
   validation_function = loss_sem,
   mtry = mtry)
 
 
-as.list(letters[1:4]) %>% setNames(letters[1:4])
-
 start = Sys.time()
-results = flexforest(data=test, iterations = 50,
-             formula = test_model, fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
+results = flexforest(data=uni, iterations = 10,
+             formula = uni_mod, fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
            validation_function = loss_sem)
 end = Sys.time()
 end - start
+
+results
+require(lavaan)
+i = 1
+
+
+
+require(purrr)
+1:length(results) %>% map(aggregate_vi)
+x

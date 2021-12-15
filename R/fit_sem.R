@@ -21,6 +21,9 @@ variable_sampler_sem = function(formula, ...) {
 
 }
 
+get_variables = function(model, ...) {
+
+}
 
 sem_write_one_line = function(latent, observed) {
   paste0(latent, " =~ ", paste0(observed, collapse = " + "))

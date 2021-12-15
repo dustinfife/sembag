@@ -53,11 +53,15 @@ require(flexplot)
 flexplot(latent~x11, data=uni)
 flexplot(latent~x13, data=uni)
 latent_uni = x
+uni_mod = '
+f =~ x1+x2+x3+x4+x5+x6+x7+x8+x9+x15+x16+x17+x18+x19
+'
+usethis::use_data(uni_mod, overwrite=T)
 usethis::use_data(uni, overwrite=T)
 usethis::use_data(latent_uni, overwrite=T)
 
-
-
+paste0(names(uni), collapse="+")
+head(uni)
 
 
 # create nonlinear effects
