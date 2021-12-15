@@ -47,12 +47,12 @@ flexforest = function(data, formula, iterations=500,
                       data_sampler = NULL,
                       validation_function = NULL,
                       mtry = NULL) {
-  #require(parallel)
+  require(parallel)
 
-  #cores    = parallel::detectCores()*.8
-  #clusters = parallel::makeCluster(cores)
-  #clusterEvalQ(clusters, library("flexforest"))
-  #clusterEvalQ(clusters, library("magrittr"))
+  cores    = parallel::detectCores()*.8
+  clusters = parallel::makeCluster(cores)
+  clusterEvalQ(clusters, library("flexforest"))
+  clusterEvalQ(clusters, library("magrittr"))
   results = 1:iterations %>% map(flexforest_inloop,
             data=data, formula=formula, iterations = iterations,
             fit_function = fit_function, variable_sampler = variable_sampler,
@@ -70,7 +70,7 @@ flexforest = function(data, formula, iterations=500,
 
   varimp = colMeans(d, na.rm=T)
 
-  #parallel::stopCluster(clusters)
+  parallel::stopCluster(clusters)
   return(list(results=results, varimp=varimp))
 }
 
