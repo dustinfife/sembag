@@ -22,7 +22,7 @@ lm <- function (formula, data, subset, weights, na.action,
                 qr = TRUE, singular.ok = TRUE, contrasts = NULL,
                 offset, ...)
 {
-  browser()
+
   ret.x <- x
   ret.y <- y
   cl <- match.call()

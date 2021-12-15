@@ -1,0 +1,52 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 how do I split at a node?\
+* I split based on the residuals of the latent\
+* I compute y~x \
+\
+\
+Have some latent outcome\
+* then make the node split based on \
+\
+A tree is a latent variable (the entire tree)\
+* so a tree will have variables x_1, x_2, x_3, etc.\
+* but it will not have y_1, z_1, etc. \
+* the outcome within each tree is\'85..the latent outcome variable?\
+		* make the outcome identical to the eventual thing you\'92re trying to predict \
+		* (like social functioning)\
+* or (or perhaps in addition) we can have part of the split criteria be that it cannot be correlated with other observed variables\
+	* so split decision might be to minimize correlation with z and maximize correlated with y\
+	* or maybe just minimize correlation with z\
+	* then we would have a \'91latent purity\'92 thing\
+	* so we\'92d have something like:\
+		minimize(sum(x-y)) and maximize(sum(x-z))\
+\
+Other ideas\
+* create another variable intentionally uncorrelated with everything and maximize correlation within\
+* while minimizing correlation between\
+\
+We\'92re not trying to get the latent variable, but the functional form between observed and latent\
+* estimate latent with fa\
+* use random forest to identify variable importance\
+* visualize top variables with latent\
+\
+Keep going with what I\'92m doing (bagging and fitting)\
+* then finish up with VI\
+* then I\'92ll be able to see which vars matter\
+* won\'92t solve the nonlinear problem, but it\'92s a step\
+\
+Or unsupervised RF\
+* creates simulated data in background\
+* tries to classify which are simulated versus not\
+* comes up with proximity cluster\
+	* .9 proximity means that variable was in same not 90% of the time\
+* so I can use that proximity matrix\
+	* eliminate those entires where proximity < .2 or something?\
+\
+\
+ relationship between}
