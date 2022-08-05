@@ -21,8 +21,9 @@ variable_sampler = function(variables, mtry=NULL) {
 
   if (is.null(mtry)) mtry = get_mtry(variables)
   if (!is.list(variables)) return(sample(variables, size=mtry))
+
   variables = 1:length(variables) %>%
-              purrr::map(function(x) sample(variables[[x]], size=mtry[[x]]))
+              purrr::map(function(x) sample(variables[[x]], size=mtry[[x]], replace=T))
   return(variables)
 }
 

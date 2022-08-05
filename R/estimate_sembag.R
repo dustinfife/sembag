@@ -12,12 +12,22 @@
 #'
 #' @examples
 #'
-flexforest_inloop = function(iteration = 1, data, formula, iterations,
+sembag_inloop = function(iteration = 1, data, formula, iterations,
                       fit_function = NULL,
                       variable_sampler = NULL,
                       data_sampler = NULL,
                       validation_function = NULL,
                       mtry = NULL) {
+
+  # make sure all variables actually exist
+  variable_names = parse_model_code(formula, return_observed_as_vector=FALSE)
+  observed = variable_names$observed %>% unlist %>%trimws
+  variables_not_in_dataset = !(observed %in% names(data))
+  if (sum(variables_not_in_dataset)>0) {
+    message = paste0("The following variables you're trying to model are not in the dataset: \n\n",
+                     paste0(observed[variables_not_in_dataset], collapse=" "))
+    stop(message)
+  }
 
   # define a loop
   formula_i = return_formula_i(formula, variable_sampler)
@@ -41,19 +51,39 @@ flexforest_inloop = function(iteration = 1, data, formula, iterations,
 
 }
 
-flexforest = function(data, formula, iterations=500,
+
+#' Use sembag
+#'
+#' @param data
+#' @param formula A formula of the form ~ a + b + c. Note, there is no need to
+#' put an outcome variable in the formula
+#' @param fit_function
+#' @param variable_sampler
+#' @param data_sampler
+#' @param validation_function
+#' @param mtry
+#' @param iterations
+#'
+#' @importFrom magrittr `%>%`
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+sembag = function(data, formula, iterations=500,
                       fit_function = NULL,
                       variable_sampler = NULL,
                       data_sampler = NULL,
                       validation_function = NULL,
                       mtry = NULL) {
-  require(parallel)
-
-  cores    = parallel::detectCores()*.8
-  clusters = parallel::makeCluster(cores)
-  clusterEvalQ(clusters, library("flexforest"))
-  clusterEvalQ(clusters, library("magrittr"))
-  results = 1:iterations %>% map(flexforest_inloop,
+  # require(parallel)
+  #
+  # cores    = parallel::detectCores()*.8
+  # clusters = parallel::makeCluster(cores)
+  # clusterEvalQ(clusters, library("sembag"))
+  # clusterEvalQ(clusters, library("magrittr"))
+  results = 1:iterations %>% purrr::map(sembag_inloop,
             data=data, formula=formula, iterations = iterations,
             fit_function = fit_function, variable_sampler = variable_sampler,
             validation_function = validation_function,
@@ -70,7 +100,7 @@ flexforest = function(data, formula, iterations=500,
 
   varimp = colMeans(d, na.rm=T)
 
-  parallel::stopCluster(clusters)
+  # parallel::stopCluster(clusters)
   return(list(results=results, varimp=varimp))
 }
 

@@ -1,10 +1,24 @@
 parse_model_code = function(model, return_observed_as_vector = TRUE) {
 
-  lines  = unlist(strsplit(model, "\n"))
-  models = unlist(sapply(lines, strsplit, "=~"))
-  latents  = models[seq(1, length(models), by=2)] %>% trimws() %>% remove_names()
+  # where user puts + then more observed variables, put on one line
+  all_on_one_line = gsub("[ ]+?[+]\n[ ]+?", "+", model) %>%
+    {gsub(pattern = "\n[ ]+?[+]", replacement = "+", x = .)}
+  remove_line_breaks = gsub("\n[ ]*\n", "\n", all_on_one_line)
+  latents_on_one_line = strsplit(remove_line_breaks, "\n") %>%
+    unlist() %>%
+    trimws() %>%
+    .[.!=""]
+  models = sapply(latents_on_one_line, strsplit, "=~") %>%
+    unlist()
+  latents  = models[seq(1, length(models), by=2)] %>%
+    trimws() %>%
+    sembag:::remove_names()
+  missing_latent = which(latents=="")
+  if (length(missing_latent)>0) latents = latents[-missing_latent]
   obs = models[seq(2, length(models), by=2)] %>% trimws() %>% remove_names()
 
+
+  #obs[obs==""] = NULL
 
   if (return_observed_as_vector) {
     observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE))
@@ -18,7 +32,12 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
 }
 
 loss_sem = function(fit, data) {
-  observed_cov = cov(data[,lavaan::lavNames(fit)])
+
+  # check to see if model actually fit
+  if (class(fit)[1] != "lavaan") return(NA)
+
+  observed_names = lavaan::lavNames(fit)
+  observed_cov = cov(data[,observed_names], use="pairwise.complete.obs")
   implied_cov  = lavaan::fitted(fit)$cov
   f = log(det(implied_cov)) +
     matrix_trace(implied_cov %*% solve(implied_cov)) -
@@ -28,6 +47,10 @@ loss_sem = function(fit, data) {
 }
 
 permute_variables = function(fit, data) {
+
+  # check to see if model actually fit
+  if (class(fit)[1] != "lavaan") return(NA)
+
   # get the variable names
   names_i = lavaan::lavNames(fit)
   chi_shuffled = as.list(names_i) %>% setNames(names_i)
