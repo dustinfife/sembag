@@ -38,7 +38,7 @@ loss_sem = function(fit, data) {
 
   observed_names = lavaan::lavNames(fit)
   # I should probably have a check to make sure all variables are numeric
-  if (all(!(is.numeric(data[,observed_names])))) {
+  if (!all(lapply(data[,observed_names], is.numeric)%>%unlist)) {
     stop("You have one or more variables that are not numeric. Please remove those and run again.")
   }
   observed_cov = cov(data[,observed_names], use="pairwise.complete.obs")

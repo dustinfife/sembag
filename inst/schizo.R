@@ -1,4 +1,5 @@
-d = read.csv("inst/schizo_bootstrapped.csv")
+d = read.csv("inst/schizo_bootstrapped.csv") %>%
+  mutate(sfs_ic1 = as.numeric(sfs_ic1))
 source("inst/schizo_model.R")
 
 # check variables are in dataset
@@ -6,8 +7,13 @@ require(tidyverse)
 parse_model_code(full.model)
 observed = parse_model_code(full.model)$observed %>% trimws
 d[,observed] # it was able to find all variables in our model. Yay!
-
+head(d[,observed])
 # run the model
+mode(d[,observed[1]])
+a = lapply(d[,observed], function(x) {if (mode(x)=="numeric") {return(NA)} else {return(mode(x))}}) %>% unlist
+a[!is.na(a)]
+d$sfs_ic1
+observed[1]
 results = sembag:::sembag(data=d, iterations = 1000,
                           formula = full.model,
                           fit_function = sembag:::fit_rf_sem,
