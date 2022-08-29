@@ -37,6 +37,10 @@ loss_sem = function(fit, data) {
   if (class(fit)[1] != "lavaan") return(NA)
 
   observed_names = lavaan::lavNames(fit)
+  # I should probably have a check to make sure all variables are numeric
+  if (all(!(is.numeric(data[,observed_names])))) {
+    stop("You have one or more variables that are not numeric. Please remove those and run again.")
+  }
   observed_cov = cov(data[,observed_names], use="pairwise.complete.obs")
   implied_cov  = lavaan::fitted(fit)$cov
   f = log(det(implied_cov)) +
