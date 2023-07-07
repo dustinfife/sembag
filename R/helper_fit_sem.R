@@ -89,7 +89,6 @@ loss_sem_chisq = function(fit) {
 
 
 aggregate_vi = function(i,list) {
-  browser()
   whole_matrix = lavNames()
   df = list$vi %>% as.data.frame()
   names(uni)
