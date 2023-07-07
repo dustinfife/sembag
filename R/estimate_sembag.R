@@ -47,7 +47,7 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   vi_i = lapply(permute_variables(fit_i, data_sample$validation), function(x) validation_i-x)
 
   # compute the loss function for the results
-  return(list(oob = validation_i, variables = formula_i, vi = vi_i, fit = fit_i))
+  return(list(oob = validation_i, variables = formula_i, vi = vi_i))
 
 }
 
@@ -89,7 +89,7 @@ sembag = function(data, formula, iterations=500,
             validation_function = validation_function,
             mtry = mtry)
 
-  var_names = parse_model_code(formula)$observed
+  var_names = parse_model_code(formula)$observed %>% trimws
   d = data.frame(matrix(nrow=iterations, ncol=length(var_names))) %>%
     setNames(var_names)
   for (i in 1:nrow(d)) {
