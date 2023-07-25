@@ -29,6 +29,8 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
     stop(message)
   }
 
+  cat(paste0("Iteration ", i, "\n"))
+
   # define a loop
   formula_i = return_formula_i(formula, variable_sampler)
 

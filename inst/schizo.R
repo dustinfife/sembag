@@ -1,4 +1,5 @@
-d = read.csv("inst/schizo_bootstrapped.csv") %>%
+require(tidyverse)
+d = read.csv("Datasets/schizo_bootstrapped.csv") %>%
   mutate(sfs_ic1 = as.numeric(sfs_ic1))
 source("inst/schizo_model.R")
 
@@ -39,8 +40,8 @@ d[,grep("psqi", names(d))]
 names(results)
 
 
-
-# sembag_inloop(data=d, formula=full.model, iterations = 10,
+save(results, file="inst/schizo_sembag_results.Rdat")
+results$varimp# sembag_inloop(data=d, formula=full.model, iterations = 10,
 #                                fit_function = fit_rf_sem, variable_sampler = variable_sampler_sem,
 #                                validation_function = loss_sem,
 #                                mtry = 10)
