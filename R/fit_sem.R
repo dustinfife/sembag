@@ -21,8 +21,6 @@ variable_sampler_sem = function(formula, ...) {
   observed = variable_names$observed
   latents  = variable_names$latents
 
-  # make sure all variables are actually in the dataset
-
   # randomly sample the variables
   sampled_variables = variable_sampler(observed, mtry = get_mtry_sem(observed))
 
