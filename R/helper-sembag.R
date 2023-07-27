@@ -28,7 +28,7 @@ variable_sampler = function(variables, mtry=NULL) {
   mtry_sampled      = lapply(latent_numbers, function(x) mtry[[x]])
   variables = 1:length(variables_sampled) %>%
               purrr::map(function(x) sample(variables_sampled[[x]], size=mtry_sampled[[x]], replace=T))
-  return(variables)
+  return(list(variables=variables, numbers=latent_numbers))
 }
 
 return_formula_i = function(formula, variable_sampler=NULL) {

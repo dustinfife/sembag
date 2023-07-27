@@ -25,7 +25,7 @@ variable_sampler_sem = function(formula, ...) {
   sampled_variables = variable_sampler(observed, mtry = get_mtry_sem(observed))
 
   # rewrite the model
-  sampled_sem_model = mapply(sem_write_one_line, latents, sampled_variables) %>%
+  sampled_sem_model = mapply(sem_write_one_line, latents[sampled_variables$numbers], sampled_variables$variables) %>%
     paste0(collapse="\n")
 
   return(sampled_sem_model)
