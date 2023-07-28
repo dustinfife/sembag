@@ -90,7 +90,7 @@ sembag = function(data, formula, iterations=500,
             fit_function = fit_function, variable_sampler = variable_sampler,
             validation_function = validation_function,
             mtry = mtry)
-  browser()
+
   var_names = parse_model_code(formula)$observed %>% trimws
   d = data.frame(matrix(nrow=iterations, ncol=length(var_names))) %>%
     setNames(var_names)
