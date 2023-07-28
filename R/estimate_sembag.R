@@ -90,17 +90,19 @@ sembag = function(data, formula, iterations=500,
             fit_function = fit_function, variable_sampler = variable_sampler,
             validation_function = validation_function,
             mtry = mtry)
-
+  browser()
   var_names = parse_model_code(formula)$observed %>% trimws
   d = data.frame(matrix(nrow=iterations, ncol=length(var_names))) %>%
     setNames(var_names)
+
   for (i in 1:nrow(d)) {
     vi_results = results[[i]]$vi
     vars_selected = names(vi_results)
-    d[i,vars_selected] = results[[i]]$vi
+    d[i,vars_selected] = vi_results
   }
-
-  varimp = colMeans(d, na.rm=T)
+  # very oddly, this doesn't work....I keep getting NaN for colmeans
+  #varimp = colMeans(d, na.rm=T)
+  varimp = var_names %>% map(function(x) { mean(d[,x], na.rm=T)}) %>% set_names(var_names)
 
   # parallel::stopCluster(clusters)
   return(list(results=results, varimp=varimp))
