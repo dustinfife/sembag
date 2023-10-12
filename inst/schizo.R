@@ -1,26 +1,55 @@
 require(tidyverse)
-d = read.csv("Datasets/schizo_bootstrapped.csv") %>%
+d = read.csv("~/Downloads/defense formatted2.csv") %>%
   mutate(sfs_ic1 = as.numeric(sfs_ic1))
-source("inst/schizo_model.R")
+data=d
+
+full_model2 = '
+  pdi =~ pdi_think+pdi_true+pdi_dis
+  spq.pos =~ spq_suspic+spq_ideas_ref+spq_unus_percep
+    pos.schiz =~ pqb_posdis_sum+olife_ue_sum+mssb_pos_sum + spq.pos + pdi
+
+
+  spq.neg =~ spq_constricted_affect+spq_noclosefriends+spq_social_anx
+
+  spq.dis =~ spq_eccentric_behavior+spq_odd_speech
+    dis.schiz =~ olife_cd_sum+mssb_dis_sum+pqb_disdis_sum + spq.dis
+
+  family =~ ctq_ea+ctq_en+fesfs_family
+
+  mh_history =~ mommh_diagnosis+dadmh_diagnosis+mom_treat
+
+  dep =~ dass_2110+dass_2116+dass_2117
+
+  sf =~ fesfs_friends+fesfs_independent+fesfs_interacting
+
+  qol =~qol_daily_activities_sat+qol_health_sat+qol_family_sat
+
+    qol ~ mh_history + dep + sf + spq.neg + dis.schiz + pos.schiz + family
+'
+require(lavaan)
+fit = cfa(full_model2, data=d, missing = "ML")
+
+
+source("~/Downloads/Defense Full Initial Model - sembag ready 3.R")
 
 # check variables are in dataset
 require(tidyverse)
 parse_model_code(full.model)
 observed = parse_model_code(full.model)$observed %>% trimws
-d[,observed] # it was able to find all variables in our model. Yay!
-head(d[,observed])
-# run the model
-mode(d[,observed[1]])
-a = lapply(d[,observed], function(x) {if (mode(x)=="numeric") {return(NA)} else {return(mode(x))}}) %>% unlist
-a[!is.na(a)]
-d$sfs_ic1
-observed[1]
+
+test_schiz = '
+
+'
+fit = cfa()
+
+
+parcels = read.csv("~/Downloads/parcels.csv")
 results = sembag:::sembag(data=d, iterations = 1000,
                           formula = full.model,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
-                          mtry=20)
+                          mtry=20, spearman_brown=TRUE, parcel_sizes=parcels)
 results
 nrow(d)
 grep("assist", names(d), value=T)

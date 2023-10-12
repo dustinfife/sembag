@@ -54,19 +54,22 @@ return_data_i = function(data, data_sampler = NULL) {
 fit_data_i = function(formula_i, data_i, fit_function=NULL, ...) {
 
   if (!is.null(fit_function)) {
-    return(fit_function(formula_i, data_i))
+    return(fit_function(formula_i, data_i, ...))
   } else {
     return(lm(formula_i, data_i, ...))
   }
 }
 
-validation_fit_i = function(fit_i, data_i, validation_function) {
+validation_fit_i = function(fit_i, data_i, validation_function, ...) {
+
   if (!is.null(validation_function)) {
-    return(validation_function(fit_i, data_i))
+    results = tryCatch(validation_function(fit_i, data_i, ...),
+                       error = function(e) e)
+    if ("error" %in% class(results)) return(NULL) else return(results)
   } else {
     outcome = all.vars(formula(fit_i))
     observed = fit_i$model[,outcome]
-    predicted = predict(fit_i, newdata=data_i)
+    predicted = predict(fit_i, newdata=data_i, ...)
     sse = sum((observed-predicted)^2)
     sse
   }
@@ -79,6 +82,12 @@ loss_function_i = function(model_i, loss_function=NULL) {
   } else {
     return(loss_function(model_i))
   }
+}
+
+loss_two_step = function(model_i) {
+  # find the fit of the original model
+
+  # find the fit of a saturated model
 }
 
 fit_function_check = function(data, model, formula) {

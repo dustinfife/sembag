@@ -1,6 +1,6 @@
 fit_rf_sem = function(formula, data, ...) {
 
-  results = tryCatch(lavaan::sem(formula, data, ...), error = function(e) e)
+  results = tryCatch(lavaan::sem(formula, data), error = function(e) e)
   if ("error" %in% class(results)) return(NULL) else return(results)
 }
 

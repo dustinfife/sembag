@@ -17,7 +17,7 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
                       variable_sampler = NULL,
                       data_sampler = NULL,
                       validation_function = NULL,
-                      mtry = NULL) {
+                      mtry = NULL, ...) {
 
   # make sure all variables actually exist
   variable_names = parse_model_code(formula, return_observed_as_vector=FALSE)
@@ -39,14 +39,20 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   training_i   = data_sample$training
   validation_i = data_sample$validation
 
+  #browser()
   # fit the test set
-  fit_i = fit_data_i(formula_i, training_i, fit_function)
+  fit_i = fit_data_i(formula_i, training_i, fit_function, ...)
 
   # fit to the validation set
-  validation_i = validation_fit_i(fit_i, data=validation_i, validation_function)
+
+  validation_i = validation_fit_i(fit_i, data=validation_i, validation_function, ...)
 
   # variable importance measure
-  vi_i = lapply(permute_variables(fit_i, data_sample$validation), function(x) validation_i-x)
+  if (!is.null(validation_i)) {
+    vi_i = lapply(permute_variables(fit_i, data_sample$validation, formula_i,...), function(x) validation_i-x)
+  } else {
+    vi_i = NULL
+  }
 
   # compute the loss function for the results
   return(list(oob = validation_i, variables = formula_i, vi = vi_i))
@@ -65,6 +71,7 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
 #' @param validation_function
 #' @param mtry
 #' @param iterations
+#' @param ... other arguments passed to other functions inside sembag
 #'
 #' @importFrom magrittr `%>%`
 #'
@@ -78,18 +85,19 @@ sembag = function(data, formula, iterations=500,
                       variable_sampler = NULL,
                       data_sampler = NULL,
                       validation_function = NULL,
-                      mtry = NULL) {
+                      mtry = NULL, ...) {
   # require(parallel)
   #
   # cores    = parallel::detectCores()*.8
   # clusters = parallel::makeCluster(cores)
   # clusterEvalQ(clusters, library("sembag"))
   # clusterEvalQ(clusters, library("magrittr"))
+
   results = 1:iterations %>% purrr::map(sembag_inloop,
             data=data, formula=formula, iterations = iterations,
             fit_function = fit_function, variable_sampler = variable_sampler,
             validation_function = validation_function,
-            mtry = mtry)
+            mtry = mtry, ...)
 
   var_names = parse_model_code(formula)$observed %>% trimws
   d = data.frame(matrix(nrow=iterations, ncol=length(var_names))) %>%
