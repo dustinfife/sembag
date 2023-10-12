@@ -1,16 +1,15 @@
 #' Title
 #'
-#' @param data
+#' @param data the dataset
 #' @param formula A formula of the form ~ a + b + c. Note, there is no need to
 #' put an outcome variable in the formula
-#' @param fit_function
-#' @param iterations
+#' @param fit_function a custom function to use for estimating parameters
+#' @param iterations number of iterations
 #' @importFrom magrittr `%>%`
 #'
-#' @return
+#' @return a list
 #' @export
 #'
-#' @examples
 #'
 sembag_inloop = function(iteration = 1, data, formula, iterations,
                       fit_function = NULL,

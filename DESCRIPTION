@@ -1,6 +1,6 @@
 Package: sembag
 Title: Estimate Structural Equation Models with Bagging
-Version: 0.0.1.2
+Version: 0.0.2
 Authors: Dustin Fife
 Maintainer: Dustin Fife <fife.dustin@gmail.com>
 Description: What the package does (one paragraph).
