@@ -1,6 +1,6 @@
 Package: sembag
 Title: Estimate Structural Equation Models with Bagging
-Version: 0.0.2
+Version: 0.0.3
 Authors: Dustin Fife
 Maintainer: Dustin Fife <fife.dustin@gmail.com>
 Description: What the package does (one paragraph).
@@ -13,5 +13,8 @@ Depends:
     R (>= 2.10)
 LazyData: true
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

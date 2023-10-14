@@ -1,0 +1,24 @@
+---
+title: "Variable Selection Using the `sembag` algorithm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sembag}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Structural Equation Modeling (SEM) was designed to model the relationship between latent variables using variable indicators, and to hypothesize and evaluate relationships between latent variables. However, much like any maximum likelihood algorithm, it is prone to overfitting, particularly when one is attempting to select variables using SEM machinery. 
+
+A common approach in other branches of statistics for variable selection (and avoiding overfitting) is to use ensemble methods (e.g., bagging, random forest, boosting). Ensemble methods in statistics and machine learning are techniques that combine the predictions of multiple models to improve the overall predictive performance. The idea behind ensemble methods is that by aggregating the results of multiple models, you can often obtain more accurate and robust predictions compared to using a single model. 
+
+The `sembag` algorithm combines the advantages of 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sembag)
+```

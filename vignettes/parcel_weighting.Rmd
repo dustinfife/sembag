@@ -1,0 +1,47 @@
+---
+title: "parcel_weighting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{parcel_weighting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+In this study, parcels are made up of different numbers of items (e.g., the parcel xx has xx items, while the parcel xx has xx items). According to measurement theory (e.g., Lord & Novick, 1968) the more items one has, the more reliable the measure. Likewise, those parcels with more items will have higher reliability. This becomes problematic for variable selection because some parcels will be selected 
+*not* because they're more reliable per se, but simply because that parcel has more items. Since the ultimate goal of this analysis is to select items from the parcels, it would be unwise to allow a parcels size to dictate whether it would be selected. 
+
+Recall that sembag selects variables by bootstrapping from the sample/randomly selecting a limited number of variables. Next, each of these small models are fit to the data, the $\chi^2$ is recorded (we'll call it $\chi_i^2$, which indicates the $\chi^2$ of the *i*th model), and variable importance is computed as the difference between $\chi_i^2$ and $\hat{\chi_i^2}$, where $\hat{\chi_i^2}$ represents the $\chi^2$ of the *i*th model when the scores have been randomly shuffled.  
+
+Recall that the $\chi^2$ statistic is a function of the maximum likelihood loss function (typically noted as $F_{ml}$):
+
+$$F_{ml} = ln|\hat{\Sigma}| + tr(R\hat{\Sigma}^{-1}) - ln|R|$$
+Here $\Sigma$ is the model-implied variance/covariance matrix and $R$ is the observed variance/covariance matrix. Using RAM specification (McArdle), $\Sigma$ can be dissected into four matrices as follows:
+
+#Fmat %*% solve(I-A) %*% S %*% t(solve(I-A)) %*% t(Fmat)
+$$\Sigma = F (I-A)^{-1} S [(I-A)^{-1}]^\prime$$
+where F is the "filter" matrix (which simply indicates which variables are latent versus observed), $I$ is the identity matrix, $A$ is the *asymmetric* matrix (which shows the path coefficients, including factor loadings) and $S$ is the symmetric matrix (which shows the covariances/residual variances).
+
+The factor loadings can be found in the $A$ matrix. If factor loadings for parcels are artificially high, they will affect the implied variance/covariance matrix (and thus the loss function $F_{ml}$ and thus the $\chi^2$ statistic). 
+
+However, recall the relationship between factor loadings and the reliability of a single item: $\rho = \lambda^2$ (McDonald, 1995). In other words, the square of the factor loading tells us the reliability of the parcel. 
+
+Also recall the equation for the Spearman Brown (SB) formula:
+
+$$\hat{\rho}=\frac{n\times \rho}{1 + (n-1)*\rho}$$
+
+The SB can tell us what the expected reliability ($\hat{\rho}$) of a test would be if we were to multiply the number of items by \n (e.g., if we doubled the number of items, $n$ would be 2). 
+
+For our purposes, we can use the SB to estimate the reliability of the parcel *if it had a specified number of items*. For example, suppose a Parcel A has 40 items and has factor loading of .9, while Parcel B has 5 items and a factor loading of .3. We could chose an arbitrary number[^arbitrary] of items with which we could standardize all parcels (e.g., 10). For Parcel A, $n$ would be $10/40 = .25$ and the "adjusted" factor loading would be:
+
+[^arbitrary]: This really is almost entirely arbitrary since all items are going to be normalized to the same value. However, if the number of items is too high the factor loadings will also be high and one is more likely to find nonpositive definite matrices. Ten seems like a pretty magical number because that's the number of digits I use to type this document. 
+
+$$\frac{.25\times .9}{1 + (.25-1)*.9} = 0.731$$
+while for Parcel B, $n$ would be $10/5 = 2$, the adjusted reliability would equal 0.78.
+
+If we adjusted all factor loadings, we could obtain a new $A$ matrix with the SB-adjusted factor loadings. (We'll call this new matrix $A^\prime$). Plugging that new matrix into the RAM specification, we get a new implied variance/covariance matrix:
+
+$$\Sigma^\prime = F (I-A^\prime)^{-1} S (I-A^\prime)^{-1}$$
+
+Which can then be plugged in to the loss function $F_{ml}$, which can then be plugged into the estimate for the $\chi^2$. Then, bazinga, we're rolling in the dough. 
+
+

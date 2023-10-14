@@ -1,7 +1,23 @@
 require(tidyverse)
 d = read.csv("~/Downloads/defense formatted2.csv") %>%
   mutate(sfs_ic1 = as.numeric(sfs_ic1))
-data=d
+
+source("~/Downloads/Defense Full Initial Model - sembag ready 3.R")
+
+# check variables are in dataset
+#parse_model_code(full.model)
+#observed = parse_model_code(full.model)$observed %>% trimws
+
+
+parcels = read.csv("~/Downloads/parcels.csv")
+results = sembag:::sembag(data=d, iterations = 1000,
+                          formula = full.model,
+                          fit_function = sembag:::fit_rf_sem,
+                          variable_sampler = sembag:::variable_sampler_sem,
+                          validation_function = sembag:::loss_sem,
+                          mtry=20, spearman_brown=TRUE, parcel_sizes=parcels)
+results
+
 
 full_model2 = '
   pdi =~ pdi_think+pdi_true+pdi_dis
@@ -30,32 +46,8 @@ require(lavaan)
 fit = cfa(full_model2, data=d, missing = "ML")
 
 
-source("~/Downloads/Defense Full Initial Model - sembag ready 3.R")
-
-# check variables are in dataset
-require(tidyverse)
-parse_model_code(full.model)
-observed = parse_model_code(full.model)$observed %>% trimws
-
-test_schiz = '
-
-'
-fit = cfa()
 
 
-parcels = read.csv("~/Downloads/parcels.csv")
-results = sembag:::sembag(data=d, iterations = 1000,
-                          formula = full.model,
-                          fit_function = sembag:::fit_rf_sem,
-                          variable_sampler = sembag:::variable_sampler_sem,
-                          validation_function = sembag:::loss_sem,
-                          mtry=20, spearman_brown=TRUE, parcel_sizes=parcels)
-results
-nrow(d)
-grep("assist", names(d), value=T)
-d[,c("assist3", "assist6", "olife_3")]
-d[,grep("psqi", names(d))]
-(sort(results$varimp))
 # some of these items are not numeric: psqi4, psqi15, psqi1-4, psqi26
 # these items do not exist:
   # pdi_think17, pdi_true3, pdi_true21, pdi_dis19, pdi_dis17 pdi_true11 pdi_end10 pdi_dis8 pdi_dis4 pqb_dis29 pdi_end8

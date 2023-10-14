@@ -130,17 +130,22 @@ permute_variables = function(fit, data, formula, ...) {
   # loop through variables and iterate
 
 
-  for (i in names_i) {
+  for (i in 1:length(names_i)) {
+    nm = names_i[i]
     data_shuffled = data
-    data_shuffled[,i] = sample(data[,i])
+    data_shuffled[,nm] = sample(data[,nm])
 
     # refit the data
     fit_shuffled = fit_rf_sem(formula, data_shuffled)
-    chi_shuffled = tryCatch(loss_sem(fit, data_shuffled, ...),
+
+    chi_shuffled_i = tryCatch(loss_sem(fit_shuffled, data_shuffled, ...),
                             error = function(e) e)
-    if ("error" %in% class(chi_shuffled)) chi_shuffled[i] = NULL else chi_shuffled[i] = chi_shuffled
+
+    if ("error" %in% class(chi_shuffled)) chi_shuffled[[i]] = NULL else chi_shuffled[[i]] = chi_shuffled_i
 
   }
+
+
   return(chi_shuffled)
 }
 

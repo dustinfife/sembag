@@ -48,7 +48,9 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
 
   # variable importance measure
   if (!is.null(validation_i)) {
-    vi_i = lapply(permute_variables(fit_i, data_sample$validation, formula_i,...), function(x) validation_i-x)
+    vi_estimates = permute_variables(fit_i, data_sample$validation, formula_i,...)
+
+    vi_i = lapply(vi_estimates, function(x) if (is.numeric(x)) return(validation_i-x) else return(NA))
   } else {
     vi_i = NULL
   }
