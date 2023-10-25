@@ -38,19 +38,18 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   training_i   = data_sample$training
   validation_i = data_sample$validation
 
-  #browser()
   # fit the test set
   fit_i = fit_data_i(formula_i, training_i, fit_function, ...)
 
   # fit to the validation set
-
-  validation_i = validation_fit_i(fit_i, data=validation_i, validation_function, ...)
+  # this returns the chi square, adjusted for parcel size (if needed)
+  chi_for_validation_dataset = validation_fit_i(fit_i, data=validation_i, validation_function, ...)
 
   # variable importance measure
-  if (!is.null(validation_i)) {
+  if (!is.null(chi_for_validation_dataset)) {
     vi_estimates = permute_variables(fit_i, data_sample$validation, formula_i,...)
 
-    vi_i = lapply(vi_estimates, function(x) if (is.numeric(x)) return(validation_i-x) else return(NA))
+    vi_i = lapply(vi_estimates, function(x) if (is.numeric(x)) return(x-chi_for_validation_dataset) else return(NA))
   } else {
     vi_i = NULL
   }

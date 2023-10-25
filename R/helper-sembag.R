@@ -66,6 +66,7 @@ validation_fit_i = function(fit_i, data_i, validation_function, ...) {
     results = tryCatch(validation_function(fit_i, data_i, ...),
                        error = function(e) e)
     if ("error" %in% class(results)) return(NULL) else return(results)
+
   } else {
     outcome = all.vars(formula(fit_i))
     observed = fit_i$model[,outcome]

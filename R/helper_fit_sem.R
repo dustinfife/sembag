@@ -17,9 +17,6 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   if (length(missing_latent)>0) latents = latents[-missing_latent]
   obs = models[seq(2, length(models), by=2)] %>% trimws() %>% remove_names()
 
-
-  #obs[obs==""] = NULL
-
   if (return_observed_as_vector) {
     observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE))
   } else {
@@ -31,8 +28,6 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   # add later: extracting covariances and regressions
 }
 
-
-
 spearman_brown_adjustment = function(variable, A, items, prophecy_items = 10) {
   r = A[variable,]
   n = prophecy_items/items
@@ -40,50 +35,54 @@ spearman_brown_adjustment = function(variable, A, items, prophecy_items = 10) {
   return(adjusted_factor_loadings)
 }
 
+# extract the RAM matrices so I can adjust for reliability using spearman brown
+ram_matrix_adjustment_sb = function(fit, spearman_brown, parcel_sizes) {
 
-#fit = test_fit
-#parcel_sizes = read.csv("~/Downloads/parcels.csv")
-# next: find out where I call loss_sem and figure out how to supply "parcel_sizes" argument
+  # just return model-implied variance/covariance matrix
+  if (!spearman_brown | is.null(parcel_sizes)) {
+    return(lavaan::fitted(fit)$cov)
+  }
+
+  ram = lav2ram(fit)
+  A = ram$A
+  A_new = matrix(0,nrow=nrow(A), ncol=ncol(A))
+
+  # identify factor loadings
+  variables = row.names(ram$A)
+  parcel_sizes_i = parcel_sizes[parcel_sizes$variable %in% variables,]
+
+  # adjust the factor loadings
+  for (i in 1:length(variables)) {
+    A_new[i,] = spearman_brown_adjustment(variables[i], A, parcel_sizes_i$items[i])
+  }
+
+  # now re-estimate the chi square with this new matrix
+  Fmat = ram$F
+  I = matrix(0, nrow=nrow(A), ncol=ncol(A))
+  diag(I) = 1
+  S = ram$S
+  implied_cov = Fmat %*% solve(I-A) %*% S %*% t(solve(I-A)) %*% t(Fmat)
+  return(implied_cov)
+}
+
+
 loss_sem = function(fit, data, spearman_brown=TRUE, parcel_sizes=NULL) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
 
   observed_names = lavaan::lavNames(fit)
+
   # I should probably have a check to make sure all variables are numeric
   if (!all(lapply(data[,observed_names], is.numeric)%>%unlist)) {
     stop("You have one or more variables that are not numeric. Please remove those and run again.")
   }
 
-  # extract the RAM matrices so I can adjust for reliability using spearman brown
-  if (spearman_brown | is.null(parcel_sizes)) {
-    ram = lav2ram(fit)
-    A = ram$A
-    A_new = matrix(0,nrow=nrow(A), ncol=ncol(A))
-
-    # identify factor loadings
-    variables = row.names(ram$A)
-    #parcel_sizes = data.frame(variables = row.names(A), parcel_size = round(runif(length(variables), 1, 20)))
-    parcel_sizes_i = parcel_sizes[parcel_sizes$variable %in% variables,]
-    for (i in 1:length(variables)) {
-        A_new[i,] = spearman_brown_adjustment(variables[i], A, parcel_sizes_i$items[i])
-    }
-
-    # now re-estimate the chi square with this new matrix
-    Fmat = ram$F
-    I = matrix(0, nrow=nrow(A), ncol=ncol(A))
-      diag(I) = 1
-    S = ram$S
-    implied_cov = Fmat %*% solve(I-A) %*% S %*% t(solve(I-A)) %*% t(Fmat)
-    observed_cov = cov2cor(lavaan::inspect(fit, "sampstat")$cov)
-  } else {
-    observed_cov = cov(data[,observed_names], use="pairwise.complete.obs")
-    implied_cov  = lavaan::fitted(fit)$cov
-  }
-
+  implied_cov = ram_matrix_adjustment_sb(fit, spearman_brown, parcel_sizes)
+  observed_cov = cov2cor(lavaan::inspect(fit, "sampstat")$cov)
 
   f = log(det(implied_cov)) +
-    matrix_trace(implied_cov %*% solve(implied_cov)) -
+    matrix_trace(observed_cov %*% solve(implied_cov)) -
     log(det(observed_cov)) - ncol(observed_cov)
   chi = (nrow(data)-1)*f
   return(chi)
@@ -118,6 +117,7 @@ lav2ram = function(fit) {
     list(A = A, S = S, F = F)
   }
 }
+
 
 permute_variables = function(fit, data, formula, ...) {
 
