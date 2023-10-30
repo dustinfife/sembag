@@ -28,7 +28,7 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   # add later: extracting covariances and regressions
 }
 
-spearman_brown_adjustment = function(variable, A, items, prophecy_items = 10) {
+spearman_brown_adjustment = function(variable, A, items, prophecy_items = 5) {
   r = A[variable,]
   n = prophecy_items/items
   adjusted_factor_loadings = (n*r)/(1 + (n-1)*r)
