@@ -28,108 +28,43 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   # add later: extracting covariances and regressions
 }
 
-spearman_brown_adjustment = function(variable, A, items, prophecy_items = 5) {
-  r = A[variable,]
-  n = prophecy_items/items
-  adjusted_factor_loadings = (n*r)/(1 + (n-1)*r)
-  return(adjusted_factor_loadings)
-}
-
-# extract the RAM matrices so I can adjust for reliability using spearman brown
-ram_matrix_adjustment_sb = function(fit, spearman_brown, parcel_sizes) {
-
-  # just return model-implied variance/covariance matrix
-  if (!spearman_brown | is.null(parcel_sizes)) {
-    return(lavaan::fitted(fit)$cov)
-  }
-
-  ram = lav2ram(fit)
-  A = ram$A
-  A_new = matrix(0,nrow=nrow(A), ncol=ncol(A))
-
-  # identify factor loadings
-  variables = row.names(ram$A)
-  parcel_sizes_i = parcel_sizes[parcel_sizes$variable %in% variables,]
-
-  # adjust the factor loadings
-  for (i in 1:length(variables)) {
-    A_new[i,] = spearman_brown_adjustment(variables[i], A, parcel_sizes_i$items[i])
-  }
-
-  # now re-estimate the chi square with this new matrix
-  Fmat = ram$F
-  I = matrix(0, nrow=nrow(A), ncol=ncol(A))
-  diag(I) = 1
-  S = ram$S
-  implied_cov = Fmat %*% solve(I-A) %*% S %*% t(solve(I-A)) %*% t(Fmat)
-  return(implied_cov)
-}
-
-
-loss_sem = function(fit, data, spearman_brown=TRUE, parcel_sizes=NULL) {
+loss_sem = function(fit, spearman_brown=TRUE, parcel_sizes=NULL) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
 
   observed_names = lavaan::lavNames(fit)
+  data = lavInspect(test_fit, "data")
 
   # I should probably have a check to make sure all variables are numeric
   if (!all(lapply(data[,observed_names], is.numeric)%>%unlist)) {
     stop("You have one or more variables that are not numeric. Please remove those and run again.")
   }
 
-  implied_cov = ram_matrix_adjustment_sb(fit, spearman_brown, parcel_sizes)
-  observed_cov = cov2cor(lavaan::inspect(fit, "sampstat")$cov)
+  implied_cov = ram_matrix_adjustment_sb(fit, parcel_sizes=parcel_sizes, spearman_brown=spearman_brown)
+  observed_cov = lavaan::inspect(fit, "sampstat")$cov
+
 
   f = log(det(implied_cov)) +
-    matrix_trace(observed_cov %*% solve(implied_cov)) -
-    log(det(observed_cov)) - ncol(observed_cov)
-  chi = (nrow(data)-1)*f
+      matrix_trace(observed_cov %*% solve(implied_cov)) -
+      log(det(observed_cov)) - ncol(observed_cov)
+  chi = (nrow(data))*f  # apparently lavaan multiplies by n, not n-1.
+                        # see https://groups.google.com/g/lavaan/c/aiODQLfzzrc
+  loss_sem_chisq(fit)
   return(chi)
 }
 
-# taken from the simstandard package
-lav2ram = function(fit) {
-  {
-    pt <- lavaan::standardizedSolution(fit)
-    pt$id <- 1:nrow(pt)
-    v_all <- unique(c(pt$lhs, pt$rhs)) %>% str_subset(pattern="")
-    v_latent <- unique(pt$lhs[pt$op == "=~"])
-    v_observed <- v_all[!(v_all %in% v_latent)]
-    k <- length(v_all)
-    A <- matrix(0, nrow = k, ncol = k, dimnames = list(v_all,
-                                                       v_all))
-    S <- matrix(0, nrow = k, ncol = k, dimnames = list(v_all,
-                                                       v_all))
-    F <- A
-    diag(F) <- 1
-    F <- F[v_observed, ]
-    for (i in pt[pt[, "op"] == "=~", "id"]) {
-      A[pt$rhs[i], pt$lhs[i]] <- pt$est.std[i]
-    }
-    for (i in pt[pt[, "op"] == "~", "id"]) {
-      A[pt$lhs[i], pt$rhs[i]] <- pt$est.std[i]
-    }
-    for (i in pt[(pt[, "op"] == "~~"), "id"]) {
-      S[pt$lhs[i], pt$rhs[i]] <- pt$est.std[i]
-      S[pt$rhs[i], pt$lhs[i]] <- pt$est.std[i]
-    }
-    list(A = A, S = S, F = F)
-  }
-}
-
-
-permute_variables = function(fit, data, formula, ...) {
+permute_variables = function(fit, formula, ...) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
+  data = lavInspect(test_fit, "data")
 
   # get the variable names
   names_i = lavaan::lavNames(fit)
   chi_shuffled = as.list(names_i) %>% setNames(names_i)
+
   # loop through variables and iterate
-
-
   for (i in 1:length(names_i)) {
     nm = names_i[i]
     data_shuffled = data
@@ -144,8 +79,6 @@ permute_variables = function(fit, data, formula, ...) {
     if ("error" %in% class(chi_shuffled)) chi_shuffled[[i]] = NULL else chi_shuffled[[i]] = chi_shuffled_i
 
   }
-
-
   return(chi_shuffled)
 }
 
@@ -167,7 +100,6 @@ loss_sem_coef = function(fit) {
 loss_sem_chisq = function(fit) {
   lavaan::fitMeasures(fit, "chisq")
 }
-
 
 aggregate_vi = function(i,list) {
   whole_matrix = lavNames()
