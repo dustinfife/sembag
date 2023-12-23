@@ -43,7 +43,8 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
 
   # fit to the validation set
   # this returns the chi square, adjusted for parcel size (if needed)
-  chi_for_validation_dataset = validation_fit_i(fit_i, data=validation_i, validation_function, ...)
+
+  chi_for_validation_dataset = loss_sem(fit_i, data=validation_i, ...)
 
   # variable importance measure
   if (!is.null(chi_for_validation_dataset)) {

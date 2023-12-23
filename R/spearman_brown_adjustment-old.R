@@ -42,8 +42,7 @@ lav2ram = function(fit) {
 }
 
 # extract the RAM matrices so I can adjust for reliability using spearman brown
-# extract the RAM matrices so I can adjust for reliability using spearman brown
-ram_matrix_adjustment_sb = function(fit, parcel_sizes, spearman_brown=TRUE, prophecy_items = 5) {
+ram_matrix_adjustment_sb = function(fit, spearman_brown, parcel_sizes) {
 
   # just return model-implied variance/covariance matrix
   if (!spearman_brown | is.null(parcel_sizes)) {
@@ -54,14 +53,22 @@ ram_matrix_adjustment_sb = function(fit, parcel_sizes, spearman_brown=TRUE, prop
   A = ram$A
   A_new = matrix(0,nrow=nrow(A), ncol=ncol(A))
 
-  # identify factor loadings
-  variables = row.names(ram$A)
-  parcel_sizes_i = parcel_sizes[parcel_sizes$variable %in% variables,]
+  # extract observed variable names
+  observed_variables = lavNames(fit)
 
-  # adjust the factor loadings
-  for (i in 1:length(variables)) {
-    A_new[,i] = spearman_brown_adjustment(variables[i], A, parcel_sizes_i, prophecy_items)
-    A_new
+  # subset parcel size matrix to only those we observe in this model
+  parcel_sizes_i = parcel_sizes[parcel_sizes$variable %in% observed_variables,]
+
+  A_columns_to_modify = which(apply(A, 2, function(x) !all(x==0)))
+  browser()
+  # loop through A matrix, one column at a time, and adjust them
+  for (i in 1:length(A_columns_to_modify)) {
+    items = 5/parcel_sizes_i$items
+    rows_I_need = row.names(A) %in% observed_variables
+    columns_I_need = A_columns_to_modify[i]
+    A_values_I_need = A[rows_I_need, columns_I_need]
+    sb_adjustment = (items*A_values_I_need)/(1 + (items-1)*A_values_I_need)
+    A_new[rows_I_need, columns_I_need] = sb_adjustment
   }
 
   # now re-estimate the chi square with this new matrix
@@ -69,32 +76,28 @@ ram_matrix_adjustment_sb = function(fit, parcel_sizes, spearman_brown=TRUE, prop
   I = matrix(0, nrow=nrow(A), ncol=ncol(A))
   diag(I) = 1
   S = ram$S
-  implied_cor = Fmat %*% solve(I-A_new) %*% S %*% t(solve(I-A_new)) %*% t(Fmat)
-
-    # need to adjust by model-implied standard deviations (not actual standard deviations)
-  sds = sqrt(diag(fitted(fit)$cov))
-  implied_cov = lavaan::cor2cov(implied_cor, sds)
-  # convert correlation matrix to covariance matrix
+  implied_coZ = Fmat %*% solve(I-A_new) %*% S %*% t(solve(I-A_new)) %*% t(Fmat)
   return(implied_cov)
 }
 
 spearman_brown_adjustment = function(variable, A, items, prophecy_items = 5) {
-
+  browser()
   # error checking
   spearman_brown_error(variable, A, items)
 
   # extract column names
   column_names = unlist(dimnames(A)[2])
   r = A[,column_names == variable]
-  items$items = prophecy_items/items$items
+  items = prophecy_items/items
 
   # identify items that are the same in both
-  v = column_names %in% items$variable
+  v = column_names %in% variable
   # adjust factor loadings for those variables user provides
   adjusted_factor_loadings = r
-  adjusted_factor_loadings[v] =  (items$items*r[v])/(1 + (items$items-1)*r[v])
+  adjusted_factor_loadings[v] =  (items*r[v])/(1 + (items-1)*r[v])
 
   # make an adjustment for items with loadings > 1
   adjusted_factor_loadings[adjusted_factor_loadings>1] = r[adjusted_factor_loadings>1]
   return(adjusted_factor_loadings)
 }
+

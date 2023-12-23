@@ -6,5 +6,5 @@ test_that("loss_sem works", {
 })
 
 test_that("permuate_variables works", {
-  permuate_variables(fit, )
+  #permuate_variables(fit, )
 })

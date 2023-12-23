@@ -28,13 +28,13 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   # add later: extracting covariances and regressions
 }
 
-loss_sem = function(fit, spearman_brown=TRUE, parcel_sizes=NULL) {
+loss_sem = function(fit, data=NULL, spearman_brown=TRUE, parcel_sizes=NULL) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
 
   observed_names = lavaan::lavNames(fit)
-  data = lavInspect(test_fit, "data")
+  if (is.null(data)) data = lavInspect(test_fit, "data")
 
   # I should probably have a check to make sure all variables are numeric
   if (!all(lapply(data[,observed_names], is.numeric)%>%unlist)) {
@@ -54,11 +54,10 @@ loss_sem = function(fit, spearman_brown=TRUE, parcel_sizes=NULL) {
   return(chi)
 }
 
-permute_variables = function(fit, formula, ...) {
+permute_variables = function(fit, data, formula, ...) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
-  data = lavInspect(test_fit, "data")
 
   # get the variable names
   names_i = lavaan::lavNames(fit)
