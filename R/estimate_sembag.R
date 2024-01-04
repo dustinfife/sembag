@@ -48,7 +48,7 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
 
   # variable importance measure
   if (!is.null(chi_for_validation_dataset)) {
-    vi_estimates = permute_variables(fit_i, data_sample$validation, formula_i,...)
+    vi_estimates = permute_variables(fit=fit_i, data=data_sample$validation, formula = formula_i,...)
 
     vi_i = lapply(vi_estimates, function(x) if (is.numeric(x)) return(x-chi_for_validation_dataset) else return(NA))
   } else {
@@ -111,7 +111,9 @@ sembag = function(data, formula, iterations=500,
   }
   # very oddly, this doesn't work....I keep getting NaN for colmeans
   #varimp = colMeans(d, na.rm=T)
-  varimp = var_names %>% map(function(x) { mean(d[,x], na.rm=T)}) %>% set_names(var_names)
+  varimp = var_names %>%
+    map(function(x) { mean(d[,x], na.rm=T)}) %>%
+    purrr::set_names(var_names)
 
   # parallel::stopCluster(clusters)
   return(list(results=results, varimp=varimp))

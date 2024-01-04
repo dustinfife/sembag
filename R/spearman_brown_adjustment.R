@@ -1,5 +1,3 @@
-
-
 spearman_brown_error = function(variable, A, items) {
 
   if (!all(names(items) %in% c("variable", "items"))) {
@@ -60,8 +58,8 @@ ram_matrix_adjustment_sb = function(fit, parcel_sizes, spearman_brown=TRUE, prop
 
   # adjust the factor loadings
   for (i in 1:length(variables)) {
-    A_new[,i] = spearman_brown_adjustment(variables[i], A, parcel_sizes_i, prophecy_items)
-    A_new
+    sb_adjustment = spearman_brown_adjustment(variables[i], A, parcel_sizes_i, prophecy_items)
+    if (!is.null(sb_adjustment)) A_new[,i] = sb_adjustment
   }
 
   # now re-estimate the chi square with this new matrix
@@ -92,9 +90,18 @@ spearman_brown_adjustment = function(variable, A, items, prophecy_items = 5) {
   v = column_names %in% items$variable
   # adjust factor loadings for those variables user provides
   adjusted_factor_loadings = r
-  adjusted_factor_loadings[v] =  (items$items*r[v])/(1 + (items$items-1)*r[v])
+  adjusted_factor_loadings[v] =  sb_calculation(r[v], items$items)
 
   # make an adjustment for items with loadings > 1
-  adjusted_factor_loadings[adjusted_factor_loadings>1] = r[adjusted_factor_loadings>1]
+  if (any(is.na(adjusted_factor_loadings))) return (NULL)
+  condition = tryCatch(adjusted_factor_loadings>1)
+  if ("error" %in% class(condition)) {
+    browser()
+  }
+  adjusted_factor_loadings[condition] = r[condition]
   return(adjusted_factor_loadings)
+}
+
+sb_calculation = function(rho, n_proportion) {
+  (n_proportion*rho)/(1 + (n_proportion-1)*rho)
 }

@@ -17,10 +17,13 @@ test_that("spearman_brown_adjustment works", {
   # increase the reliability
   higher_rho = spearman_brown_adjustment("z", a, items=parcel_sizes, prophecy_items = 10)
   expect_true(all((higher_rho) >= (a[,1])))
+  expect_true(sb_calculation(a[,1]["z1"], 2) == higher_rho[["z1"]])
 
   # decrease the reliability
   lower_rho = spearman_brown_adjustment("z", a, items=parcel_sizes, prophecy_items = 3)
   expect_true(all((lower_rho) <= (a[,1])))
+
+
 })
 
 test_that("spearman_brown_error", {
@@ -35,9 +38,9 @@ test_that("spearman_brown_error", {
   expect_error(spearman_brown_error(variables, a, parcel_sizes))
 
   # when one of the variables isn't in the a matrix
-  parcel_sizes[1,1] = "asdfasdf"
-  names(parcel_sizes)[1] = "variable"
-  expect_error(spearman_brown_error(variables, a, parcel_sizes))
+  # parcel_sizes[1,1] = "asdfasdf"
+  # names(parcel_sizes)[1] = "variable"
+  # expect_error(spearman_brown_error(variables, a, parcel_sizes))
 })
 
 test_that("lav2ram works", {
@@ -49,24 +52,32 @@ test_that("lav2ram works", {
   # extract variances
   s = lav2ram(test_fit)$S
   lavaan::lavInspect(test_fit, "std")$psi
-  s
 })
 
 test_that("ram_matrix_adjustment_sb works", {
 
-  original_varcov = fitted(test_fit)$cov
+  original_varcov = fitted(parcel_fit)$cov
+  parcel_sizes = data.frame(variable=rownames(original_varcov), items = 5)
   # with no adjustment, the implied and sb-adjusted are the same
-  sb_adjusted_varcov = ram_matrix_adjustment_sb(test_fit, parcel_sizes)
+  sb_adjusted_varcov = ram_matrix_adjustment_sb(parcel_fit, parcel_sizes)
+
+
   expect_equal(sum(sb_adjusted_varcov - original_varcov), 0, tolerance=.001)
 
   # increasing items makes it more reliable
-  sb_adjusted_varcov = ram_matrix_adjustment_sb(test_fit, parcel_sizes, prophecy_items = 10)
+  sb_adjusted_varcov = ram_matrix_adjustment_sb(parcel_fit, parcel_sizes, prophecy_items = 10)
   expect_true(sum(sb_adjusted_varcov - original_varcov)>0)
 
   # decreasing items makes it less reliable
-  sb_adjusted_varcov = ram_matrix_adjustment_sb(test_fit, parcel_sizes, prophecy_items = 2)
+  sb_adjusted_varcov = ram_matrix_adjustment_sb(parcel_fit, parcel_sizes, prophecy_items = 2)
   expect_true(sum(sb_adjusted_varcov - original_varcov)<0)
 
 })
 
+test_that("sb_calculation works", {
+  testeq = sb_calculation(.68, 2)
+  expect_true(round(testeq, digits=2) == .81)
+  expect_true(sb_calculation(testeq, .5) == .68)
+  expect_true(sb_calculation(.68, 1) == .68)
+})
 

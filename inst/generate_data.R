@@ -42,3 +42,16 @@ usethis::use_data(test_model, overwrite=T)
 require(lavaan)
 test_fit = sem(test_model, data=test)
 usethis::use_data(test_fit, overwrite = T)
+
+
+x = rnorm(5000)
+reliable_data = runif(5, .95, .96) %>%
+  purrr::map_dfc(f, x) %>%
+  set_names(paste0("z", 1:5))
+reliable_model = '
+z =~ z1 + z2 + z3 + z4 + z5
+'
+reliable_fit = sem(reliable_model, reliable_data)
+usethis::use_data(reliable_data, overwrite=T)
+usethis::use_data(reliable_model, overwrite=T)
+usethis::use_data(reliable_fit, overwrite=T)

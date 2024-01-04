@@ -17,11 +17,11 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   if (length(missing_latent)>0) latents = latents[-missing_latent]
   obs = models[seq(2, length(models), by=2)] %>% trimws() %>% remove_names()
 
-  if (return_observed_as_vector) {
-    observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE))
-  } else {
-    observed = sapply(obs, strsplit, "+", fixed=TRUE) %>% remove_names()
-  }
+  #if (return_observed_as_vector) {
+    observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE)) %>% trimws()
+  # } else {
+  #   observed = sapply(obs, function(x) strsplit(x, "+", fixed=TRUE)) %>% unlist() %>% trimws() %>% remove_names()
+  # }
 
   return(list(observed=observed, latents=latents))
 
@@ -34,13 +34,13 @@ loss_sem = function(fit, data=NULL, spearman_brown=TRUE, parcel_sizes=NULL) {
   if (class(fit)[1] != "lavaan") return(NA)
 
   observed_names = lavaan::lavNames(fit)
-  if (is.null(data)) data = lavInspect(test_fit, "data")
+  if (is.null(data)) data = lavInspect(fit, "data")
 
   # I should probably have a check to make sure all variables are numeric
   if (!all(lapply(data[,observed_names], is.numeric)%>%unlist)) {
     stop("You have one or more variables that are not numeric. Please remove those and run again.")
   }
-
+fit
   implied_cov = ram_matrix_adjustment_sb(fit, parcel_sizes=parcel_sizes, spearman_brown=spearman_brown)
   observed_cov = lavaan::inspect(fit, "sampstat")$cov
 
@@ -50,14 +50,14 @@ loss_sem = function(fit, data=NULL, spearman_brown=TRUE, parcel_sizes=NULL) {
       log(det(observed_cov)) - ncol(observed_cov)
   chi = (nrow(data))*f  # apparently lavaan multiplies by n, not n-1.
                         # see https://groups.google.com/g/lavaan/c/aiODQLfzzrc
-  loss_sem_chisq(fit)
   return(chi)
 }
 
-permute_variables = function(fit, data, formula, ...) {
+permute_variables = function(fit, formula, data=NULL, ...) {
 
   # check to see if model actually fit
   if (class(fit)[1] != "lavaan") return(NA)
+  if (is.null(data)) data = lavInspect(fit, "data")
 
   # get the variable names
   names_i = lavaan::lavNames(fit)
@@ -65,20 +65,35 @@ permute_variables = function(fit, data, formula, ...) {
 
   # loop through variables and iterate
   for (i in 1:length(names_i)) {
-    nm = names_i[i]
-    data_shuffled = data
-    data_shuffled[,nm] = sample(data[,nm])
-
-    # refit the data
-    fit_shuffled = fit_rf_sem(formula, data_shuffled)
-
-    chi_shuffled_i = tryCatch(loss_sem(fit_shuffled, data_shuffled, ...),
-                            error = function(e) e)
-
-    if ("error" %in% class(chi_shuffled)) chi_shuffled[[i]] = NULL else chi_shuffled[[i]] = chi_shuffled_i
-
+    chi_shuffled[i] = permute_variable_i(fit=fit, formula=formula, data=data, names_i = names_i[i], ...)
   }
+
   return(chi_shuffled)
+}
+
+permute_variable_i = function(fit, formula, data, names_i, ...) {
+
+  data_shuffled = shuffle_column_i(data, names_i)
+
+  # refit the data
+  fit_shuffled = fit_rf_sem(formula, data_shuffled)
+  chi_shuffled_i = tryCatch(loss_sem(fit_shuffled, data_shuffled, ...), error = function(e) e)
+  # potential problem: shuffling ONE variable doesn't decrease the fit very much because all the other variables end up compensating
+  # maybe I should measure the loss in terms of factor loadings (factor loading before versus after shuffling).
+
+  # let's create another dataset with just three or four variables with very different reliabilities
+  # them have the test make sure the chi square difference is in the right order
+
+  # return results
+  if ("error" %in% class(chi_shuffled_i)) return(NULL) else return(chi_shuffled_i)
+}
+
+shuffle_column_i = function(data, names_i) {
+  data_shuffled = data
+  column_names = dimnames(data)[[2]]
+  current_column = which(column_names == names_i)[1]
+  data_shuffled[,current_column] = sample(data[,current_column], size=nrow(data))
+  return(data_shuffled)
 }
 
 matrix_trace = function(matrix) {

@@ -18,8 +18,17 @@ sembag_inloop(
 )
 }
 \arguments{
+\item{data}{the dataset}
+
 \item{formula}{A formula of the form ~ a + b + c. Note, there is no need to
 put an outcome variable in the formula}
+
+\item{iterations}{number of iterations}
+
+\item{fit_function}{a custom function to use for estimating parameters}
+}
+\value{
+a list
 }
 \description{
 Title

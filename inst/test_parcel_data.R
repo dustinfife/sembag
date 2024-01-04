@@ -1,17 +1,20 @@
 require(tidyverse)
+require(lavaan)
+
+#sembag:::parse_model_codeode(parcel_mod)
+head(parcel_items)
+summary(parcel_fit)
 
 
-sembag:::parse_model_codeode(parcel_mod)
-
-results = sembag:::sembag(data=parcel_data, iterations = 50,
+results = sembag:::sembag(data=parcel_data, iterations = 10,
                           formula = parcel_mod,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
-                          mtry=5, spearman_brown=TRUE, parcel_sizes=parcel_items)
+                          mtry=5, spearman_brown=FALSE, parcel_sizes=parcel_items)
 
 save(results, file="~/Downloads/parcel_test.rdata")
-files = list.files(path = "~/Downloads", pattern="parcel_test*", full.names = T)
+files = list.files(path = "~/Downloads", pattern="parcel_test.rdata", full.names = T)
 for (i in 1:length(files)) {
   load(files[i])
   if (i==1) {
@@ -20,12 +23,12 @@ for (i in 1:length(files)) {
   }
   importance_measures[i,] = results$varimp
 }
-
+i=1
 sort(importance_measures)
 parcel_means = 1:5
 for (i in 1:5) {
   parcel_group = gsub("p_", "", names(importance_measures)) %>% substr(1,1) == i
-  parcel_means[i] = mean(importance_measures[parcel_group]%>%as.numeric)
+  parcel_means[i] = median(importance_measures[parcel_group]%>%as.numeric)
 
 }
 names(parcel_means) = paste0("p", 1:5)
