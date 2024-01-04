@@ -15,7 +15,7 @@ results = sembag:::sembag(data=d, iterations = 1000,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
-                          mtry=20, spearman_brown=TRUE, parcel_sizes=parcels)
+                          mtry=20)
 results
 
 

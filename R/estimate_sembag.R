@@ -38,25 +38,38 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   training_i   = data_sample$training
   validation_i = data_sample$validation
 
+
   # fit the test set
   fit_i = fit_data_i(formula_i, training_i, fit_function, ...)
+  cov_i = lavaan::inspect(fit_i, "sampstat")$cov
 
-  # fit to the validation set
-  # this returns the chi square, adjusted for parcel size (if needed)
+  # fit to the validation set by subtracting the observed variance/covariance matrix of the validation dataset
+  # from the model-implied variance/covariance matrix
 
-  chi_for_validation_dataset = loss_sem(fit_i, data=validation_i, ...)
+  variables_i = lavaan::inspect(fit_i, "sampstat")$cov %>% dimnames() %>% pluck(1)
+  training_varcov = cov(validation_i[,variables_i], use="pairwise.complete.obs")
+  chi_training = cov_to_chi(cov_i, training_varcov, n=nrow(validation_i))
 
-  # variable importance measure
-  if (!is.null(chi_for_validation_dataset)) {
-    vi_estimates = permute_variables(fit=fit_i, data=data_sample$validation, formula = formula_i,...)
+  # loop through all variables
+  vi_i = 1:length(variables_i)
+  for (i in 1:length(variables_i)) {
+    # shuffle data
+    data_shuffled = shuffle_column_i(validation_i, variables_i[i])[,variables_i]
 
-    vi_i = lapply(vi_estimates, function(x) if (is.numeric(x)) return(x-chi_for_validation_dataset) else return(NA))
-  } else {
-    vi_i = NULL
+    # compute varcov
+    shuffled_i_varcov = cov(data_shuffled, use="pairwise.complete.obs")
+
+    if (det(shuffled_i_varcov)<=0 | det(training_varcov)<=0) browser()
+
+    # recompute chi from new varcov
+    chi_shuffled_i = cov_to_chi(shuffled_i_varcov, training_varcov, nrow(validation_i)) %>%
+      tryCatch()
+    if (!("error" %in% class(chi_shuffled_i))) vi_i[i] = chi_shuffled_i - chi_training
   }
 
+
   # compute the loss function for the results
-  return(list(oob = validation_i, variables = formula_i, vi = vi_i))
+  return(list(variables = variables_i, vi = vi_i))
 
 }
 
@@ -106,17 +119,17 @@ sembag = function(data, formula, iterations=500,
 
   for (i in 1:nrow(d)) {
     vi_results = results[[i]]$vi
-    vars_selected = names(vi_results)
+    vars_selected = results[[i]]$variables
     d[i,vars_selected] = vi_results
   }
+
   # very oddly, this doesn't work....I keep getting NaN for colmeans
   #varimp = colMeans(d, na.rm=T)
-  varimp = var_names %>%
-    map(function(x) { mean(d[,x], na.rm=T)}) %>%
-    purrr::set_names(var_names)
+  varimp = var_names %>% map(function(x) { mean(d[,x], na.rm=T)}) %>% set_names(var_names) %>% unlist
 
   # parallel::stopCluster(clusters)
-  return(list(results=results, varimp=varimp))
+  #return(list(results=results, varimp=varimp))
+  return(varimp)
 }
 
 

@@ -6,13 +6,13 @@ head(parcel_items)
 summary(parcel_fit)
 
 
-results = sembag:::sembag(data=parcel_data, iterations = 10,
+results = sembag:::sembag(data=parcel_data, iterations = 1000,
                           formula = parcel_mod,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
                           mtry=5, spearman_brown=FALSE, parcel_sizes=parcel_items)
-
+results
 save(results, file="~/Downloads/parcel_test.rdata")
 files = list.files(path = "~/Downloads", pattern="parcel_test.rdata", full.names = T)
 for (i in 1:length(files)) {

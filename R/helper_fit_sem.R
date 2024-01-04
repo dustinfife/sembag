@@ -17,11 +17,11 @@ parse_model_code = function(model, return_observed_as_vector = TRUE) {
   if (length(missing_latent)>0) latents = latents[-missing_latent]
   obs = models[seq(2, length(models), by=2)] %>% trimws() %>% remove_names()
 
-  #if (return_observed_as_vector) {
-    observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE)) %>% trimws()
-  # } else {
-  #   observed = sapply(obs, function(x) strsplit(x, "+", fixed=TRUE)) %>% unlist() %>% trimws() %>% remove_names()
-  # }
+  if (return_observed_as_vector) {
+    observed = unlist(lapply(obs, strsplit, "+", fixed=TRUE))
+  } else {
+    observed = sapply(obs, strsplit, "+", fixed=TRUE) %>% remove_names()
+  }
 
   return(list(observed=observed, latents=latents))
 
@@ -53,6 +53,15 @@ fit
   return(chi)
 }
 
+cov_to_chi = function(implied_cov, observed_cov, n) {
+  fmin = log(det(implied_cov)) +
+    matrix_trace(observed_cov %*% solve(implied_cov)) -
+    log(det(observed_cov)) - ncol(observed_cov)
+  chi = (n)*fmin  # apparently lavaan multiplies by n, not n-1.
+  # see https://groups.google.com/g/lavaan/c/aiODQLfzzrc
+  return(chi)
+}
+
 permute_variables = function(fit, formula, data=NULL, ...) {
 
   # check to see if model actually fit
@@ -77,15 +86,12 @@ permute_variable_i = function(fit, formula, data, names_i, ...) {
 
   # refit the data
   fit_shuffled = fit_rf_sem(formula, data_shuffled)
-  chi_shuffled_i = tryCatch(loss_sem(fit_shuffled, data_shuffled, ...), error = function(e) e)
-  # potential problem: shuffling ONE variable doesn't decrease the fit very much because all the other variables end up compensating
-  # maybe I should measure the loss in terms of factor loadings (factor loading before versus after shuffling).
 
-  # let's create another dataset with just three or four variables with very different reliabilities
-  # them have the test make sure the chi square difference is in the right order
+  # inspect(fit,what="std")$lambda
+  return(fit_shuffled)
 
   # return results
-  if ("error" %in% class(chi_shuffled_i)) return(NULL) else return(chi_shuffled_i)
+  # if ("error" %in% class(chi_shuffled_i)) return(NULL) else return(chi_shuffled_i)
 }
 
 shuffle_column_i = function(data, names_i) {

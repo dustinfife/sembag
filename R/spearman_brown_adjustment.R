@@ -96,7 +96,7 @@ spearman_brown_adjustment = function(variable, A, items, prophecy_items = 5) {
   if (any(is.na(adjusted_factor_loadings))) return (NULL)
   condition = tryCatch(adjusted_factor_loadings>1)
   if ("error" %in% class(condition)) {
-    browser()
+
   }
   adjusted_factor_loadings[condition] = r[condition]
   return(adjusted_factor_loadings)
