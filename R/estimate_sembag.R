@@ -46,9 +46,16 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   # fit to the validation set by subtracting the observed variance/covariance matrix of the validation dataset
   # from the model-implied variance/covariance matrix
 
-  variables_i = lavaan::inspect(fit_i, "sampstat")$cov %>% dimnames() %>% pluck(1)
-  training_varcov = cov(validation_i[,variables_i], use="pairwise.complete.obs")
-  chi_training = cov_to_chi(cov_i, training_varcov, n=nrow(validation_i))
+  variables_i = lavaan::inspect(fit_i, "sampstat")$cov %>% dimnames() %>% purrr::pluck(1)
+  if (is_sb_part_of_dotdotdot(...)) {
+    added_arguments = list(...)
+    argument_names = names(added_arguments)
+    training_varcov = ram_matrix_adjustment_sb(fit_i, added_arguments[["parcel_sizes"]], T)
+  } else {
+    training_varcov = cov(validation_i[,variables_i], use="pairwise.complete.obs")
+  }
+
+  chi_training = cov_to_chi(implied_cov = cov_i, observed_cov = training_varcov, n=nrow(validation_i))
 
   # loop through all variables
   vi_i = 1:length(variables_i)
@@ -62,17 +69,27 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
     if (det(shuffled_i_varcov)<=0 | det(training_varcov)<=0) browser()
 
     # recompute chi from new varcov
-    chi_shuffled_i = cov_to_chi(shuffled_i_varcov, training_varcov, nrow(validation_i)) %>%
+    chi_shuffled_i = cov_to_chi(implied_cov = cov_i, observed_cov = shuffled_i_varcov, nrow(validation_i)) %>%
       tryCatch()
     if (!("error" %in% class(chi_shuffled_i))) vi_i[i] = chi_shuffled_i - chi_training
   }
-
 
   # compute the loss function for the results
   return(list(variables = variables_i, vi = vi_i))
 
 }
 
+is_sb_part_of_dotdotdot = function(...) {
+  added_arguments = list(...)
+  argument_names = names(added_arguments)
+  if (!("spearman_brown" %in% argument_names)) return(FALSE)
+  if (!("parcel_sizes"   %in% argument_names)) return(FALSE)
+
+  # conditions:
+  # sb_true = argument_names[["spearman_brown"]]
+  # parcel_given = argument_names[["parcel_sizes"]]
+  return(added_arguments[["spearman_brown"]])
+}
 
 #' Use sembag
 #'

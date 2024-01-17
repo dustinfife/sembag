@@ -40,7 +40,6 @@ lav2ram = function(fit) {
 }
 
 # extract the RAM matrices so I can adjust for reliability using spearman brown
-# extract the RAM matrices so I can adjust for reliability using spearman brown
 ram_matrix_adjustment_sb = function(fit, parcel_sizes, spearman_brown=TRUE, prophecy_items = 5) {
 
   # just return model-implied variance/covariance matrix
