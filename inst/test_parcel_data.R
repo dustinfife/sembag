@@ -5,35 +5,40 @@ require(lavaan)
 head(parcel_items)
 summary(parcel_fit)
 
-
+for (i in 1:10) {
 results = sembag:::sembag(data=parcel_data, iterations = 1000,
                           formula = parcel_mod,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
                           mtry=5, spearman_brown=FALSE, parcel_sizes=parcel_items)
-results
-save(results, file="~/Downloads/parcel_test.rdata")
-files = list.files(path = "~/Downloads", pattern="parcel_test.rdata", full.names = T)
+
+  save(results, file=paste0("~/Downloads/parcel_test_nosb-", i, ".rdata"))
+}
+files = list.files(path = "~/Downloads", pattern="parcel_test_nosb-", full.names = T)
 for (i in 1:length(files)) {
   load(files[i])
+  results
   if (i==1) {
-    importance_measures = data.frame(matrix(nrow=length(files), ncol=length(results$varimp)))
-    names(importance_measures) = names(results$varimp)
+    importance_measures = data.frame(matrix(nrow=length(files), ncol=length(results)))
+    names(importance_measures) = names(results)
   }
-  importance_measures[i,] = results$varimp
+  importance_measures[i,] = results
 }
-i=1
-sort(importance_measures)
-parcel_means = 1:5
-for (i in 1:5) {
-  parcel_group = gsub("p_", "", names(importance_measures)) %>% substr(1,1) == i
-  parcel_means[i] = median(importance_measures[parcel_group]%>%as.numeric)
 
-}
-names(parcel_means) = paste0("p", 1:5)
-parcel_means
-mean((importance_measures[parcel_group])%>%as.numeric)
+sort(colMeans(importance_measures))
+# i=1
+# head(importance_measures)
+# sort(importance_measures)
+# parcel_means = 1:5
+# for (i in 1:5) {
+#   parcel_group = gsub("p_", "", names(importance_measures)) %>% substr(1,1) == i
+#   parcel_means[i] = median(importance_measures[parcel_group]%>%as.numeric)
+#
+# }
+# names(parcel_means) = paste0("p", 1:5)
+# parcel_means
+# mean((importance_measures[parcel_group])%>%as.numeric)
 
 # aggregate  info
 var_names = names(importance_measures)

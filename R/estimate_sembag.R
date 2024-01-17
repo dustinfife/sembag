@@ -47,6 +47,7 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   # from the model-implied variance/covariance matrix
 
   variables_i = lavaan::inspect(fit_i, "sampstat")$cov %>% dimnames() %>% purrr::pluck(1)
+
   if (is_sb_part_of_dotdotdot(...)) {
     added_arguments = list(...)
     argument_names = names(added_arguments)
@@ -54,6 +55,8 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
   } else {
     training_varcov = cov(validation_i[,variables_i], use="pairwise.complete.obs")
   }
+
+  if (is.na(det(training_varcov))) training_varcov = cov(validation_i[,variables_i], use="pairwise.complete.obs")
 
   chi_training = cov_to_chi(implied_cov = cov_i, observed_cov = training_varcov, n=nrow(validation_i))
 
@@ -65,8 +68,6 @@ sembag_inloop = function(iteration = 1, data, formula, iterations,
 
     # compute varcov
     shuffled_i_varcov = cov(data_shuffled, use="pairwise.complete.obs")
-
-    if (det(shuffled_i_varcov)<=0 | det(training_varcov)<=0) browser()
 
     # recompute chi from new varcov
     chi_shuffled_i = cov_to_chi(implied_cov = cov_i, observed_cov = shuffled_i_varcov, nrow(validation_i)) %>%

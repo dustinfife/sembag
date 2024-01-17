@@ -10,13 +10,30 @@ source("~/Downloads/Defense Full Initial Model - sembag ready 3.R")
 
 
 parcels = read.csv("~/Downloads/parcels.csv")
-results = sembag:::sembag(data=d, iterations = 1000,
+for (i in 1:2) {
+results = sembag:::sembag(data=d, iterations = 100,
                           formula = full.model,
                           fit_function = sembag:::fit_rf_sem,
                           variable_sampler = sembag:::variable_sampler_sem,
                           validation_function = sembag:::loss_sem,
+                          spearman_brown=TRUE, parcel_sizes=parcels,
                           mtry=20)
-results
+  save(results, file=paste0("~/Downloads/parcel_test_nosb-", i, ".rdata"))
+}
+
+
+files = list.files(path = "~/Downloads", pattern="parcel_test_nosb-", full.names = T)
+for (i in 1:length(files)) {
+  load(files[i])
+  results
+  if (i==1) {
+    importance_measures = data.frame(matrix(nrow=length(files), ncol=length(results)))
+    names(importance_measures) = names(results)
+  }
+  importance_measures[i,] = results
+}
+
+sort(colMeans(importance_measures))
 
 
 full_model2 = '
